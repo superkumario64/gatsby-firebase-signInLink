@@ -5,12 +5,13 @@
  * See: https://www.gatsbyjs.org/docs/use-static-query/
  */
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import PropTypes from "prop-types"
 import { useStaticQuery, graphql } from "gatsby"
 
 import Header from "./header"
 import "./layout.css"
+import getFirebase, { FirebaseContext } from "./Firebase"
 
 const Layout = ({ children }) => {
   const data = useStaticQuery(graphql`
@@ -23,8 +24,21 @@ const Layout = ({ children }) => {
     }
   `)
 
+  const [firebase, setFirebase] = useState(null)
+
+  useEffect(() => {
+    const app = import("firebase/app")
+    const auth = import("firebase/auth")
+
+    Promise.all([app, auth]).then(values => {
+      const firebase = getFirebase(values[0])
+
+      setFirebase(firebase)
+    })
+  })
+
   return (
-    <>
+    <FirebaseContext.Provider value={firebase}>
       <Header siteTitle={data.site.siteMetadata.title} />
       <div
         style={{
@@ -40,7 +54,7 @@ const Layout = ({ children }) => {
           <a href="https://www.gatsbyjs.org">Gatsby</a>
         </footer>
       </div>
-    </>
+    </FirebaseContext.Provider>
   )
 }
 
